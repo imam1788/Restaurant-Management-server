@@ -27,6 +27,8 @@ async function run() {
 
     const foodsCollection = client.db('restaurantManagementDB').collection('foods');
 
+    const purchasesCollection = client.db('restaurantManagementDB').collection('purchases');
+
     app.get('/foods', async (req, res) => {
       const cursor = foodsCollection.find();
       const result = await cursor.toArray();
@@ -38,6 +40,13 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const food = await foodsCollection.findOne(query);
       res.send(food);
+    });
+
+    app.post('/purchase', async (req, res) => {
+      const purchaseData = req.body;
+      purchaseData.date = Date.now();
+      const result = await purchasesCollection.insertOne(purchaseData);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
