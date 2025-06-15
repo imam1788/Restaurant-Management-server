@@ -49,6 +49,31 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/purchase', async (req, res) => {
+      const buyerEmail = req.query.buyerEmail;
+      if (!buyerEmail) {
+        return res.status(400).send({ error: "buyerEmail query parameter is required" });
+      }
+      const query = { buyerEmail };
+      const purchases = await purchasesCollection.find(query).toArray();
+      res.send(purchases);
+    });
+
+    // Delete purchase by ID
+    app.delete('/purchase/:id', async (req, res) => {
+      const id = req.params.id;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: "Invalid purchase ID" });
+      }
+      const query = { _id: new ObjectId(id) };
+      const result = await purchasesCollection.deleteOne(query);
+      if (result.deletedCount === 1) {
+        res.send({ message: "Purchase deleted successfully" });
+      } else {
+        res.status(404).send({ error: "Purchase not found" });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
