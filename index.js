@@ -84,6 +84,16 @@ async function run() {
       res.send(result);
     });
 
+    
+    app.get('/my-foods', async (req, res) => {
+      const userEmail = req.query.email;
+      if (!userEmail) return res.status(400).send({ error: 'User email required' });
+
+      const foods = await foodsCollection.find({ "addedBy.email": userEmail }).toArray();
+      res.send(foods);
+    });
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
