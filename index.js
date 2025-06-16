@@ -43,11 +43,57 @@ async function run() {
     });
 
     app.post('/purchase', async (req, res) => {
-      const purchaseData = req.body;
-      purchaseData.date = Date.now();
-      const result = await purchasesCollection.insertOne(purchaseData);
-      res.send(result);
+      try {
+        const purchase = req.body;
+
+        if (!purchase?.foodId || !purchase?.quantity || !purchase?.buyerEmail) {
+          return res.status(400).send({ error: "Missing required purchase fields" });
+        }
+
+        const food = await foodsCollection.findOne({ _id: new ObjectId(purchase.foodId) });
+
+        if (!food) {
+          return res.status(404).send({ error: "Food not found" });
+        }
+
+        // Prevent self-purchase
+        if (food.addedBy?.email === purchase.buyerEmail) {
+          return res.status(403).send({ error: "You cannot purchase your own food item" });
+        }
+
+        // Check quantity availability
+        const requestedQty = parseInt(purchase.quantity);
+        if (food.quantity === 0) {
+          return res.status(400).send({ error: "Item is not available (quantity 0)" });
+        }
+
+        if (requestedQty > food.quantity) {
+          return res.status(400).send({ error: `Only ${food.quantity} items are available` });
+        }
+
+        // Proceed with purchase
+        purchase.date = new Date();
+
+        const result = await purchasesCollection.insertOne(purchase);
+
+        // Update food quantity and purchase count
+        await foodsCollection.updateOne(
+          { _id: new ObjectId(purchase.foodId) },
+          {
+            $inc: {
+              quantity: -requestedQty,
+              purchaseCount: requestedQty
+            }
+          }
+        );
+
+        res.send({ success: true, message: "Purchase successful", result });
+      } catch (error) {
+        console.error("Purchase failed:", error);
+        res.status(500).send({ error: "Internal server error" });
+      }
     });
+
 
     app.get('/purchase', async (req, res) => {
       const buyerEmail = req.query.buyerEmail;
