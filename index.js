@@ -59,7 +59,6 @@ async function run() {
       res.send(purchases);
     });
 
-    // Delete purchase by ID
     app.delete('/purchase/:id', async (req, res) => {
       const id = req.params.id;
       if (!ObjectId.isValid(id)) {
@@ -73,6 +72,18 @@ async function run() {
         res.status(404).send({ error: "Purchase not found" });
       }
     });
+
+    app.post('/foods', async (req, res) => {
+      const newFood = req.body;
+
+      if (!newFood.addedBy || !newFood.addedBy.email) {
+        return res.status(400).send({ error: 'addedBy information is required' });
+      }
+      newFood.purchaseCount = 0;
+      const result = await foodsCollection.insertOne(newFood);
+      res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
