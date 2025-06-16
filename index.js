@@ -84,7 +84,7 @@ async function run() {
       res.send(result);
     });
 
-    
+
     app.get('/my-foods', async (req, res) => {
       const userEmail = req.query.email;
       if (!userEmail) return res.status(400).send({ error: 'User email required' });
@@ -92,6 +92,36 @@ async function run() {
       const foods = await foodsCollection.find({ "addedBy.email": userEmail }).toArray();
       res.send(foods);
     });
+
+    app.put('/foods/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedData = req.body;
+
+        console.log("PUT called for ID:", id);
+        console.log("Updated Data:", updatedData);
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: 'Invalid food ID' });
+        }
+
+        const result = await foodsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ error: 'Food not found' });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error('PUT /foods/:id error:', error);
+        res.status(500).send({ error: 'Server error while updating food' });
+      }
+    });
+
+
 
 
 
