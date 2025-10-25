@@ -4,7 +4,7 @@ This is the backend API for the Restaurant Management Website built using **Expr
 
 ## 🌐 Live API URL
 
-👉 [https://your-vercel-api.vercel.app](https://your-vercel-api.vercel.app)
+👉 [https://restaurant-management-server-liart.vercel.app/](https://restaurant-management-server-liart.vercel.app)
 
 ---
 
